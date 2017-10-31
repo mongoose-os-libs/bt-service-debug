@@ -1,0 +1,17 @@
+author: mongoose-os
+description: Configuration over Bluetooth GATT service support
+type: lib
+version: 1.0
+
+libs:
+  - origin: https://github.com/mongoose-os-libs/bt-common
+
+config_schema:
+  - ["bt.debug_svc_enable", "b", true, {title: "Enable the debug service"}]
+
+tags:
+  - bt
+  - bluetooth
+  - c
+
+manifest_version: 2017-09-29
