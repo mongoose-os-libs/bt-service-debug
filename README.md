@@ -15,5 +15,4 @@ The service UUID is `5f6d4f53-5f44-4247-5f53-56435f49445f`, which is a represent
 At present, only one characteristic is defined:
 
 * `306d4f53-5f44-4247-5f6c-6f675f5f5f30 (0mOS_DBG_log___0)` - a read/notify attribute that returns last debug log record when read. It also sends notifications with log messages as they are printed.
-   * _Note 1_: Reading large messages is supported, but for notificatiosn to be useful you will most likely want to set higher MTU.
-   * _Note 2_: For internal reasons, currently a read is required for notifications to be sent. After this characteristic has been read at least once, the device will start sending notifications for that connection.
+   * _Note_: Reading large messages is supported, but for notificatiosn to be useful you will most likely want to set higher MTU.

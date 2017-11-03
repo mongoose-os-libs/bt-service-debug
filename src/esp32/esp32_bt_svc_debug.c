@@ -43,9 +43,9 @@ static const esp_bt_uuid_t mos_dbg_log_uuid = {
          0x53, 0x4f, 0x6d, 0x30,
         },
 };
-static uint16_t mos_dbg_log_ah;
+static uint16_t mos_dbg_log_ah, mos_dbg_log_cc_ah;
 
-const esp_gatts_attr_db_t mos_dbg_gatt_db[3] = {
+const esp_gatts_attr_db_t mos_dbg_gatt_db[4] = {
     {
      .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
      .att_desc =
@@ -65,6 +65,9 @@ const esp_gatts_attr_db_t mos_dbg_gatt_db[3] = {
     {{ESP_GATT_RSP_BY_APP},
      {ESP_UUID_LEN_128, (uint8_t *) mos_dbg_log_uuid.uuid.uuid128,
       ESP_GATT_PERM_READ, 0, 0, NULL}},
+    {{ESP_GATT_RSP_BY_APP},
+     {ESP_UUID_LEN_16, (uint8_t *) &char_client_config_uuid,
+      ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, 0, 0, NULL}},
 };
 
 static struct mg_str s_last_debug_entry = MG_NULL_STR;
@@ -105,6 +108,7 @@ static bool mgos_bt_dbg_svc_ev(struct esp32_bt_session *bs,
                                esp_gatts_cb_event_t ev,
                                esp_ble_gatts_cb_param_t *ep) {
   bool ret = false;
+  char buf[BT_UUID_STR_LEN];
   struct bt_dbg_svc_conn_data *cd = NULL;
   struct esp32_bt_connection *bc = NULL;
   if (bs != NULL) { /* CREAT_ATTR_TAB is not associated with any session. */
@@ -116,6 +120,7 @@ static bool mgos_bt_dbg_svc_ev(struct esp32_bt_session *bs,
       const struct gatts_add_attr_tab_evt_param *p = &ep->add_attr_tab;
       uint16_t svch = p->handles[0];
       mos_dbg_log_ah = p->handles[2];
+      mos_dbg_log_cc_ah = p->handles[3];
       LOG(LL_DEBUG, ("svch = %d log_ah = %d", svch, mos_dbg_log_ah));
       break;
     }
@@ -146,12 +151,18 @@ static bool mgos_bt_dbg_svc_ev(struct esp32_bt_session *bs,
       memcpy(rsp.attr_value.value, s_last_debug_entry.p + p->offset, len);
       esp_ble_gatts_send_response(bc->gatt_if, bc->conn_id, p->trans_id,
                                   ESP_GATT_OK, &rsp);
-      /*
-       * There is no way to tell if the client is subscribed, so we take read as
-       * expression of interest.
-       * https://github.com/espressif/esp-idf/issues/1204
-       */
-      cd->notify = true;
+      ret = true;
+      break;
+    }
+    case ESP_GATTS_WRITE_EVT: {
+      const struct gatts_write_evt_param *p = &ep->write;
+      if (p->handle != mos_dbg_log_cc_ah || cd == NULL) break;
+      /* Client config control write - toggle notification. */
+      if (p->len != 2) break;
+      /* We interpret notify and indicate bits the same. */
+      cd->notify = (p->value[0] != 0);
+      LOG(LL_DEBUG, ("%s: log notify %s", mgos_bt_addr_to_str(p->bda, buf),
+                     (cd->notify ? "on" : "off")));
       ret = true;
       break;
     }
