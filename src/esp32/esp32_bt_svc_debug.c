@@ -21,7 +21,7 @@
 #include "mgos_sys_config.h"
 #include "mgos_utils.h"
 
-#include "esp32_bt.h"
+#include "esp32_bt_gatts.h"
 
 /* Note: UUIDs below are in reverse, because that's how ESP wants them. */
 static const esp_bt_uuid_t mos_dbg_svc_uuid = {
@@ -130,6 +130,7 @@ static bool mgos_bt_dbg_svc_ev(struct esp32_bt_session *bs,
       cd->gatt_if = bs->bc->gatt_if;
       cd->conn_id = bs->bc->conn_id;
       cd->mtu = bs->bc->mtu;
+      LOG(LL_DEBUG, ("MTU %u", cd->mtu));
       cd->notify = false;
       bs->user_data = cd;
       SLIST_INSERT_HEAD(&s_conns, cd, next);
@@ -161,6 +162,7 @@ static bool mgos_bt_dbg_svc_ev(struct esp32_bt_session *bs,
       if (p->len != 2) break;
       /* We interpret notify and indicate bits the same. */
       cd->notify = (p->value[0] != 0);
+      cd->mtu = bs->bc->mtu;
       LOG(LL_DEBUG, ("%s: log notify %s", mgos_bt_addr_to_str(p->bda, buf),
                      (cd->notify ? "on" : "off")));
       ret = true;
