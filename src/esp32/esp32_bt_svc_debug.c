@@ -16,8 +16,9 @@
 #include "common/queue.h"
 
 #include "mgos_config_util.h"
+#include "mgos_debug.h"
+#include "mgos_event.h"
 #include "mgos_hal.h"
-#include "mgos_hooks.h"
 #include "mgos_sys_config.h"
 #include "mgos_utils.h"
 
@@ -83,13 +84,13 @@ struct bt_dbg_svc_conn_data {
 static SLIST_HEAD(s_conns, bt_dbg_svc_conn_data) s_conns =
     SLIST_HEAD_INITIALIZER(s_conns);
 
-static void s_debug_write_hook(enum mgos_hook_type type,
-                               const struct mgos_hook_arg *arg,
-                               void *userdata) {
-  if (type != MGOS_HOOK_DEBUG_WRITE) return;
+static void s_debug_write_cb(int ev, void *ev_data, void *userdata) {
+  const struct mgos_debug_hook_arg *arg =
+      (const struct mgos_debug_hook_arg *) ev_data;
+
   s_last_debug_entry.len = 0;
   free((void *) s_last_debug_entry.p);
-  s_last_debug_entry = mg_strdup(mg_mk_str_n(arg->debug.data, arg->debug.len));
+  s_last_debug_entry = mg_strdup(mg_mk_str_n(arg->data, arg->len));
   while (s_last_debug_entry.len > 0 &&
          isspace((int) s_last_debug_entry.p[s_last_debug_entry.len - 1])) {
     s_last_debug_entry.len--;
@@ -183,7 +184,7 @@ static bool mgos_bt_dbg_svc_ev(struct esp32_bt_session *bs,
 
 bool mgos_bt_service_debug_init(void) {
   if (mgos_sys_config_get_bt_debug_svc_enable()) {
-    mgos_hook_register(MGOS_HOOK_DEBUG_WRITE, s_debug_write_hook, NULL);
+    mgos_event_add_handler(MGOS_EVENT_LOG, s_debug_write_cb, NULL);
     mgos_bt_gatts_register_service(mos_dbg_gatt_db, ARRAY_SIZE(mos_dbg_gatt_db),
                                    mgos_bt_dbg_svc_ev);
   }
