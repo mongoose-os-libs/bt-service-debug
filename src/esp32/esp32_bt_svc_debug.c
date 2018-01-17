@@ -99,8 +99,8 @@ static void s_debug_write_cb(int ev, void *ev_data, void *userdata) {
   SLIST_FOREACH(cd, &s_conns, next) {
     if (!cd->notify) continue;
     size_t len = MIN(s_last_debug_entry.len, cd->mtu - 3);
-    esp_ble_gatts_send_indicate(cd->gatt_if, cd->conn_id, mos_dbg_log_ah, len,
-                                (uint8_t *) s_last_debug_entry.p,
+    mgos_bt_gatts_send_indicate(cd->gatt_if, cd->conn_id, mos_dbg_log_ah,
+                                mg_mk_str_n((char *) s_last_debug_entry.p, len),
                                 false /* need_confirm */);
   }
 }
