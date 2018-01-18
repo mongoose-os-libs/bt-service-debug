@@ -22,6 +22,7 @@
 #include "mgos_sys_config.h"
 #include "mgos_utils.h"
 
+#include "esp32_bt.h"
 #include "esp32_bt_gatts.h"
 
 /* Note: UUIDs below are in reverse, because that's how ESP wants them. */
@@ -164,7 +165,7 @@ static bool mgos_bt_dbg_svc_ev(struct esp32_bt_session *bs,
       /* We interpret notify and indicate bits the same. */
       cd->notify = (p->value[0] != 0);
       cd->mtu = bs->bc->mtu;
-      LOG(LL_DEBUG, ("%s: log notify %s", mgos_bt_addr_to_str(p->bda, buf),
+      LOG(LL_DEBUG, ("%s: log notify %s", esp32_bt_addr_to_str(p->bda, buf),
                      (cd->notify ? "on" : "off")));
       ret = true;
       break;
