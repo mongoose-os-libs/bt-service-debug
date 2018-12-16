@@ -97,7 +97,7 @@ static enum mgos_bt_gatt_status mgos_bt_dbg_svc_ev(struct mgos_bt_gatts_conn *c,
       cd->notify_mode = na->mode;
       return MGOS_BT_GATT_STATUS_OK;
     }
-    case MGOS_BT_GATTS_EV_CLOSE: {
+    case MGOS_BT_GATTS_EV_DISCONNECT: {
       if (cd != NULL) {
         SLIST_REMOVE(&s_conns, cd, bt_dbg_svc_conn_data, next);
         free(cd);
@@ -114,7 +114,7 @@ static enum mgos_bt_gatt_status mgos_bt_dbg_svc_ev(struct mgos_bt_gatts_conn *c,
 static const struct mgos_bt_gatts_char_def s_dbg_svc_def[] = {
     {
      .uuid = "306d4f53-5f44-4247-5f6c-6f675f5f5f30", /* 0mOS_DBG_log___0 */
-     .prop = MGOS_BT_GATTS_PROP_RWNI(1, 0, 1, 1),
+     .prop = MGOS_BT_GATT_PROP_RWNI(1, 0, 1, 1),
     },
     {.uuid = NULL},
 };
