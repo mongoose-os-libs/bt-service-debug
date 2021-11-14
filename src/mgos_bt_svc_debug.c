@@ -39,10 +39,10 @@ static SLIST_HEAD(s_conns, bt_dbg_svc_conn_data) s_conns =
 static struct mg_str s_last_debug_entry = MG_NULL_STR;
 
 static void s_debug_write_cb(int ev, void *ev_data, void *userdata) {
-  const struct mgos_debug_hook_arg *arg =
-      (const struct mgos_debug_hook_arg *) ev_data;
-  s_last_debug_entry.len = 0;
-  free((void *) s_last_debug_entry.p);
+  const struct mgos_debug_hook_arg *arg = ev_data;
+  if (s_last_debug_entry.len > 0) {
+    mg_strfree(&s_last_debug_entry);
+  }
   s_last_debug_entry = mg_strdup(mg_mk_str_n(arg->data, arg->len));
   while (s_last_debug_entry.len > 0 &&
          isspace((int) s_last_debug_entry.p[s_last_debug_entry.len - 1])) {
@@ -113,8 +113,8 @@ static enum mgos_bt_gatt_status mgos_bt_dbg_svc_ev(struct mgos_bt_gatts_conn *c,
 
 static const struct mgos_bt_gatts_char_def s_dbg_svc_def[] = {
     {
-     .uuid = "306d4f53-5f44-4247-5f6c-6f675f5f5f30", /* 0mOS_DBG_log___0 */
-     .prop = MGOS_BT_GATT_PROP_RWNI(1, 0, 1, 1),
+        .uuid = "306d4f53-5f44-4247-5f6c-6f675f5f5f30", /* 0mOS_DBG_log___0 */
+        .prop = MGOS_BT_GATT_PROP_RWNI(1, 0, 1, 1),
     },
     {.uuid = NULL},
 };
