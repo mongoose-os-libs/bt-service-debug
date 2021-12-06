@@ -79,15 +79,7 @@ static enum mgos_bt_gatt_status mgos_bt_dbg_svc_ev(struct mgos_bt_gatts_conn *c,
     case MGOS_BT_GATTS_EV_READ: {
       struct mgos_bt_gatts_read_arg *ra =
           (struct mgos_bt_gatts_read_arg *) ev_arg;
-      size_t len = s_last_debug_entry.len;
-      if (len < ra->offset) {
-        len = 0;
-      } else {
-        len = s_last_debug_entry.len - ra->offset;
-      }
-      len = MIN(len, c->gc.mtu - 1);
-      mgos_bt_gatts_send_resp_data(
-          c, ra, mg_mk_str_n(s_last_debug_entry.p + ra->offset, len));
+      mgos_bt_gatts_send_resp_data(c, ra, s_last_debug_entry);
       return MGOS_BT_GATT_STATUS_OK;
     }
     case MGOS_BT_GATTS_EV_NOTIFY_MODE: {
